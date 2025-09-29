@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dezimalzahlen-Abenteuer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>
+    <style>
+        :root {
+            --primary-bg: #f0faff;
+            --secondary-bg: #ffffff;
+            --accent-color: #007bff;
+            --accent-dark: #0056b3;
+            --text-color: #333;
+            --border-color: #d1e9ff;
+            --highlight-green: #28a745;
+            --highlight-red: #dc3545;
+            --highlight-yellow: #ffc107;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            display: grid;
+            place-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        main {
+            background-color: var(--secondary-bg);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            width: 95%;
+            max-width: 800px;
+        }
+
+        h1 {
+            color: var(--accent-dark);
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .tab-navigation {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        .tab-btn {
+            background-color: #e9f5ff;
+            color: var(--accent-color);
+            border: 2px solid var(--border-color);
+            padding: 12px 20px;
+            font-size: 1em;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            background-color: #d1e9ff;
+            border-color: #a8d5ff;
+        }
+
+        .tab-btn.active {
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .content-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .canvas-container {
+            border: 2px dashed var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+            background-color: #f8fcff;
+            min-height: 250px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .explanation-area {
+            background-color: #e9f5ff;
+            border: 2px solid var(--border-color);
+            color: var(--accent-dark);
+            padding: 15px 20px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.1em;
+            line-height: 1.6;
+            font-weight: 500;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .control-group label {
+            font-weight: bold;
+        }
+
+        .control-group input[type="number"] {
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            width: 120px;
+            font-size: 1.1em;
+            text-align: center;
+        }
+        
+        .inline-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        button.action-btn {
+            background-image: linear-gradient(to bottom, var(--accent-color), var(--accent-dark));
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0px 4px 0px #004085;
+        }
+
+        button.action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0px 6px 0px #004085;
+        }
+
+        button.action-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0px 2px 0px #004085;
+        }
+
+        button.action-btn:disabled {
+            background-image: linear-gradient(to bottom, #b0b0b0, #8d8d8d);
+            box-shadow: 0px 4px 0px #5e5e5e;
+            cursor: not-allowed;
+        }
+        
+        .zehner-controls button {
+            background-color: #fff;
+            color: var(--accent-dark);
+            border: 2px solid var(--border-color);
+            width: 60px;
+            height: 40px;
+            font-size: 1em;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .zehner-controls button:hover {
+             background-color: #e9f5ff;
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <h1>Dezimalzahlen-Abenteuer</h1>
+
+        <nav class="tab-navigation">
+            <button class="tab-btn active" data-page="addition">Addition & Subtraktion</button>
+            <button class="tab-btn" data-page="zehnerpotenzen">Mit Zehnerpotenzen</button>
+            <button class="tab-btn" data-page="multiplikation">Multiplikation</button>
+            <button class="tab-btn" data-page="division">Division</button>
+        </nav>
+
+        <!-- Seite 1: Addition & Subtraktion -->
+        <div id="addition" class="page active">
+            <div class="content-wrapper">
+                <div class="explanation-area">
+                    Die wichtigste Regel: Beim Addieren und Subtrahieren müssen die <strong>Kommas immer genau untereinander</strong> stehen!
+                </div>
+                <div id="canvasAddition" class="canvas-container"></div>
+                <div class="controls">
+                    <div class="inline-controls">
+                        <input type="number" id="addZahl1" value="12.34" step="0.01">
+                        <span id="addOperator">+</span>
+                        <input type="number" id="addZahl2" value="5.6" step="0.1">
+                    </div>
+                     <button id="toggleOperator" class="action-btn">Zu Subtraktion wechseln</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seite 2: Rechnen mit Zehnerpotenzen -->
+        <div id="zehnerpotenzen" class="page">
+             <div class="content-wrapper">
+                <div class="explanation-area">
+                    Beim Rechnen mit Zehnerpotenzen (10, 100, ...) wird nur das <strong>Komma verschoben</strong>. Nach rechts bei Mal (·), nach links bei Geteilt (:).
+                </div>
+                <div id="canvasZehner" class="canvas-container"></div>
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="zehnerZahl">Startzahl</label>
+                        <input type="number" id="zehnerZahl" value="123.45" step="0.01">
+                    </div>
+                    <div class="zehner-controls">
+                        <button data-op="mul" data-val="10">· 10</button>
+                        <button data-op="mul" data-val="100">· 100</button>
+                        <button data-op="div" data-val="10">: 10</button>
+                        <button data-op="div" data-val="100">: 100</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seite 3: Multiplikation -->
+        <div id="multiplikation" class="page">
+             <div class="content-wrapper">
+                <div class="explanation-area" id="mulExplanation">
+                    <strong>Schritt 1:</strong> Rechne, als ob es keine Kommas gäbe. Klicke auf "Start", um die Animation zu sehen!
+                </div>
+                <div id="canvasMultiplikation" class="canvas-container"></div>
+                <div class="controls">
+                     <div class="inline-controls">
+                        <input type="number" id="mulZahl1" value="2.5" step="0.1">
+                        <span>×</span>
+                        <input type="number" id="mulZahl2" value="1.5" step="0.1">
+                    </div>
+                    <div class="button-group" style="display: flex; gap: 10px;">
+                        <button id="mulStepBtn" class="action-btn">Start</button>
+                        <button id="mulResetBtn" class="action-btn" style="display: none; background-image: linear-gradient(to bottom, #6c757d, #5a6268); box-shadow: 0px 4px 0px #343a40;">Reset</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seite 4: Division -->
+        <div id="division" class="page">
+             <div class="content-wrapper">
+                 <div class="explanation-area" id="divExplanation">
+                    Der Trick: Verschiebe das Komma bei <strong>beiden Zahlen</strong> so, dass die zweite Zahl (der Divisor) eine ganze Zahl wird.
+                </div>
+                <div id="canvasDivision" class="canvas-container"></div>
+                <div class="controls">
+                     <div class="inline-controls">
+                        <input type="number" id="divZahl1" value="15.84" step="0.01">
+                        <span>:</span>
+                        <input type="number" id="divZahl2" value="1.8" step="0.1">
+                    </div>
+                    <div class="button-group" style="display: flex; gap: 10px;">
+                        <button id="divStepBtn" class="action-btn">Start</button>
+                        <button id="divResetBtn" class="action-btn" style="display: none; background-image: linear-gradient(to bottom, #6c757d, #5a6268); box-shadow: 0px 4px 0px #343a40;">Reset</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        
+        const tabs = document.querySelectorAll('.tab-btn');
+        const pages = document.querySelectorAll('.page');
+
+        // Tab navigation logic
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                pages.forEach(p => p.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.page).classList.add('active');
+                
+                // Redraw canvas on tab switch to ensure it's properly sized
+                if (window.p5Instances) {
+                    window.p5Instances.forEach(p => {
+                        if (p.canvas.parentElement.offsetParent) { // check if visible
+                           p.resizeCanvas(p.canvas.parentElement.clientWidth, p.canvas.parentElement.clientHeight);
+                           p.loop();
+                        } else {
+                           p.noLoop();
+                        }
+                    });
+                }
+            });
+        });
+
+        window.p5Instances = [];
+
+        // --- Sketch 1: Addition & Subtraktion ---
+        const sketchAddition = (p) => {
+            let num1, num2, operator;
+            let targetY1, targetY2, currentY1, currentY2;
+            const FONT_SIZE = 48;
+            
+            p.setup = function() {
+                let container = document.getElementById('canvasAddition');
+                let canvas = p.createCanvas(container.clientWidth, container.clientHeight);
+                canvas.parent(container);
+                p.textFont('monospace', FONT_SIZE);
+                
+                num1 = document.getElementById('addZahl1');
+                num2 = document.getElementById('addZahl2');
+                operator = document.getElementById('addOperator');
+
+                document.getElementById('addZahl1').addEventListener('input', p.loop);
+                document.getElementById('addZahl2').addEventListener('input', p.loop);
+                document.getElementById('toggleOperator').addEventListener('click', () => {
+                    let opSpan = document.getElementById('addOperator');
+                    opSpan.textContent = opSpan.textContent === '+' ? '-' : '+';
+                    document.getElementById('toggleOperator').textContent = opSpan.textContent === '+' ? 'Zu Subtraktion wechseln' : 'Zu Addition wechseln';
+                    p.loop();
+                });
+
+                targetY1 = p.height / 2 - FONT_SIZE;
+                targetY2 = p.height / 2 + FONT_SIZE / 2;
+                currentY1 = 30;
+                currentY2 = p.height - 30;
+                window.p5Instances.push(p);
+            };
+
+            p.draw = function() {
+                p.background(248, 252, 255);
+                let str1 = parseFloat(num1.value).toString();
+                let str2 = parseFloat(num2.value).toString();
+                if(isNaN(parseFloat(num1.value)) || isNaN(parseFloat(num2.value))) {
+                    p.noLoop();
+                    return;
+                }
+
+                currentY1 += (targetY1 - currentY1) * 0.1;
+                currentY2 += (targetY2 - currentY2) * 0.1;
+
+                let commaPos1 = str1.indexOf('.') > -1 ? p.textWidth(str1.substring(0, str1.indexOf('.'))) : p.textWidth(str1);
+                let commaPos2 = str2.indexOf('.') > -1 ? p.textWidth(str2.substring(0, str2.indexOf('.'))) : p.textWidth(str2);
+                let maxCommaPos = Math.max(commaPos1, commaPos2);
+                
+                p.textAlign(p.LEFT, p.CENTER);
+                p.fill(0);
+                p.text(str1, p.width / 2 - maxCommaPos + (maxCommaPos - commaPos1), currentY1);
+                p.text(str2, p.width / 2 - maxCommaPos + (maxCommaPos - commaPos2), currentY2);
+                p.text(operator.textContent, p.width/2 - maxCommaPos - FONT_SIZE, currentY2);
+
+                // Highlight comma alignment
+                p.stroke(0, 123, 255, 150);
+                p.strokeWeight(3);
+                p.line(p.width / 2, 0, p.width / 2, p.height);
+
+                let result;
+                if (operator.textContent === '+') {
+                    result = parseFloat(num1.value) + parseFloat(num2.value);
+                } else {
+                    result = parseFloat(num1.value) - parseFloat(num2.value);
+                }
+                
+                let strResult = result.toFixed(4).replace(/\.?0+$/, "");
+                let commaPosResult = strResult.indexOf('.') > -1 ? p.textWidth(strResult.substring(0, strResult.indexOf('.'))) : p.textWidth(strResult);
+
+                p.stroke('#28a745');
+                p.line(p.width/2 - maxCommaPos - FONT_SIZE * 1.5, p.height / 2 + FONT_SIZE, p.width - 20, p.height / 2 + FONT_SIZE);
+                p.noStroke();
+                p.fill('#28a745');
+                p.text(strResult, p.width/2 - maxCommaPos + (maxCommaPos - commaPosResult), p.height/2 + FONT_SIZE * 1.5);
+
+                if (Math.abs(currentY1 - targetY1) < 0.1 && Math.abs(currentY2 - targetY2) < 0.1) {
+                    p.noLoop();
+                }
+            };
+        };
+
+        // --- Sketch 2: Zehnerpotenzen ---
+        const sketchZehner = (p) => {
+            let numberStr = "123.45";
+            let currentCommaIndex;
+            let targetCommaIndex;
+            let animationFrame = 0;
+            let isAnimating = false;
+
+            p.setup = function() {
+                let container = document.getElementById('canvasZehner');
+                let canvas = p.createCanvas(container.clientWidth, container.clientHeight);
+                canvas.parent(container);
+                p.textFont('monospace', 48);
+                p.textAlign(p.CENTER, p.CENTER);
+                
+                document.getElementById('zehnerZahl').addEventListener('input', (e) => {
+                    numberStr = e.target.value;
+                    resetAnimation();
+                    p.redraw();
+                });
+
+                document.querySelectorAll('.zehner-controls button').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                       if (isAnimating) return;
+                       let op = btn.dataset.op;
+                       let val = parseInt(btn.dataset.val);
+                       let shift = Math.log10(val);
+                       
+                       let parts = numberStr.split('.');
+                       if (parts.length === 1) numberStr += '.';
+                       
+                       let currentDotPos = numberStr.indexOf('.');
+                       
+                       if (op === 'mul') {
+                           targetCommaIndex = currentDotPos + shift;
+                           while (targetCommaIndex >= numberStr.length - 1) {
+                               numberStr += '0';
+                           }
+                       } else { // div
+                           targetCommaIndex = currentDotPos - shift;
+                           while (targetCommaIndex < 0) {
+                               numberStr = '0' + numberStr;
+                               targetCommaIndex++;
+                           }
+                       }
+                       isAnimating = true;
+                       p.loop();
+                    });
+                });
+                resetAnimation();
+                window.p5Instances.push(p);
+            };
+            
+            function resetAnimation() {
+                let val = document.getElementById('zehnerZahl').value;
+                numberStr = parseFloat(val).toString();
+                if(isNaN(parseFloat(val))) numberStr = "0";
+
+                if (numberStr.indexOf('.') === -1) {
+                    numberStr += ".";
+                }
+                currentCommaIndex = numberStr.indexOf('.');
+                targetCommaIndex = currentCommaIndex;
+                isAnimating = false;
+                p.noLoop();
+            }
+
+            p.draw = function() {
+                p.background(248, 252, 255);
+                p.fill(0);
+
+                let cleanNumber = numberStr.replace('.', '');
+                
+                let textX = p.width / 2 - p.textWidth(cleanNumber) / 2;
+                
+                for(let i = 0; i < cleanNumber.length; i++) {
+                    p.text(cleanNumber[i], textX + i * 28 + 14, p.height / 2);
+                }
+
+                if (isAnimating) {
+                    let fromX = textX + currentCommaIndex * 28;
+                    let toX = textX + targetCommaIndex * 28;
+                    let currentX = p.lerp(fromX, toX, animationFrame);
+                    
+                    p.fill(p.color(varGet('--accent-color')));
+                    p.ellipse(currentX, p.height/2 + 35, 10, 10);
+                    
+                    animationFrame += 0.05;
+                    if (animationFrame >= 1) {
+                        isAnimating = false;
+                        animationFrame = 0;
+                        let newNumArr = cleanNumber.split('');
+                        newNumArr.splice(targetCommaIndex, 0, '.');
+                        numberStr = newNumArr.join('').replace(/\.$/, ''); // Remove trailing dot
+                        document.getElementById('zehnerZahl').value = numberStr;
+                        resetAnimation();
+                    }
+                } else {
+                    p.fill(p.color(varGet('--accent-color')));
+                    let commaX = textX + currentCommaIndex * 28;
+                    p.ellipse(commaX, p.height/2 + 35, 10, 10);
+                }
+            };
+        };
+
+        // --- Sketch 3: Multiplikation ---
+        const sketchMultiplikation = (p) => {
+            let state = 'idle'; // idle, multiply, showResult, count, place
+            let counter = 0;
+            let result;
+            let resultNoDotStr;
+            let places1 = 0, places2 = 0;
+            let explanationDiv = document.getElementById('mulExplanation');
+            let stepBtn = document.getElementById('mulStepBtn');
+            let resetBtn = document.getElementById('mulResetBtn');
+
+            function resetAnimation() {
+                state = 'idle';
+                explanationDiv.innerHTML = "<strong>Schritt 1:</strong> Rechne, als ob es keine Kommas gäbe. Klicke auf 'Start'!";
+                stepBtn.textContent = 'Start';
+                stepBtn.disabled = false;
+                resetBtn.style.display = 'none';
+                p.loop();
+            }
+
+            p.setup = function() {
+                let container = document.getElementById('canvasMultiplikation');
+                let canvas = p.createCanvas(container.clientWidth, container.clientHeight);
+                canvas.parent(container);
+                p.textFont('monospace', 36);
+                p.textAlign(p.CENTER, p.CENTER);
+
+                stepBtn.addEventListener('click', () => {
+                    switch (state) {
+                        case 'idle':
+                            state = 'multiply';
+                            stepBtn.textContent = 'Nächster Schritt';
+                            resetBtn.style.display = 'inline-block';
+                            break;
+                        case 'multiply':
+                            state = 'showResult';
+                            break;
+                        case 'showResult':
+                            state = 'count';
+                            break;
+                        case 'count':
+                            state = 'place';
+                            counter = 0; // Reset counter for comma animation
+                            break;
+                        case 'place':
+                            break;
+                    }
+                    p.loop();
+                });
+                
+                resetBtn.addEventListener('click', resetAnimation);
+
+                ['mulZahl1', 'mulZahl2'].forEach(id => {
+                    document.getElementById(id).addEventListener('input', resetAnimation);
+                });
+                window.p5Instances.push(p);
+            };
+
+            p.draw = function() {
+                p.background(248, 252, 255);
+                
+                let val1 = document.getElementById('mulZahl1').value;
+                let val2 = document.getElementById('mulZahl2').value;
+
+                if (isNaN(parseFloat(val1)) || isNaN(parseFloat(val2))) {
+                    p.noLoop(); return;
+                }
+                
+                let num1 = parseFloat(val1);
+                let num2 = parseFloat(val2);
+                let str1 = val1;
+                let str2 = val2;
+
+                if (state === 'idle') {
+                    p.fill(0);
+                    p.text(`${str1} × ${str2}`, p.width/2, p.height/2);
+                    p.noLoop();
+                } 
+                else if (state === 'multiply') {
+                    explanationDiv.innerHTML = "<strong>Schritt 1:</strong> Wir tun so, als gäbe es keine Kommas...";
+                    p.fill(0);
+                    p.text(`${str1.replace('.', '')} × ${str2.replace('.', '')}`, p.width/2, p.height/2);
+                    p.noLoop(); // Wait for next click
+                }
+                else if (state === 'showResult') {
+                    explanationDiv.innerHTML = "<strong>Schritt 1:</strong> ...und multiplizieren die Zahlen.";
+                    let num1NoDot = parseInt(str1.replace('.', '') || '0');
+                    let num2NoDot = parseInt(str2.replace('.', '') || '0');
+                    resultNoDotStr = (num1NoDot * num2NoDot).toString();
+                    p.fill(0);
+                    p.text(`${str1.replace('.', '')} × ${str2.replace('.', '')} = ${resultNoDotStr}`, p.width/2, p.height/2);
+                    p.noLoop(); // Wait for next click
+                }
+                else if (state === 'count') {
+                    result = num1 * num2;
+                    places1 = (str1.split('.')[1] || '').length;
+                    places2 = (str2.split('.')[1] || '').length;
+                    explanationDiv.innerHTML = `<strong>Schritt 2:</strong> Zähle die Nachkommastellen. Zahl 1 hat <strong>${places1}</strong>, Zahl 2 hat <strong>${places2}</strong>. Das sind zusammen <strong>${places1 + places2}</strong>.`;
+                    p.fill(0);
+                    p.text(`${str1} × ${str2}`, p.width/2, p.height/2);
+                    
+                    p.fill(p.color(varGet('--highlight-green')));
+                    p.noStroke();
+                    if(places1 > 0) p.rect(p.width/2 - p.textWidth(str2)/2 - p.textWidth(' × ')/2 - p.textWidth(str1.split('.')[1])/2, p.height/2 + 20, p.textWidth(str1.split('.')[1]), 5);
+                    if(places2 > 0) p.rect(p.width/2 + p.textWidth(str1)/2 + p.textWidth(' × ')/2 + p.textWidth(str2.split('.')[0]) + 5, p.height/2 + 20, p.textWidth(str2.split('.')[1]), 5);
+                    
+                    p.noLoop(); // Wait for next click
+                }
+                else if (state === 'place') {
+                    let totalPlaces = places1 + places2;
+                    explanationDiv.innerHTML = `<strong>Schritt 3:</strong> Das Ergebnis (${resultNoDotStr}) braucht auch <strong>${totalPlaces}</strong> Nachkommastellen. Fertig!`;
+                    let resultStr = result.toFixed(totalPlaces);
+                    let resultNoDot = resultStr.replace('.', '');
+                    let commaPos = resultNoDot.length - totalPlaces;
+                    
+                    p.fill(p.color(varGet('--highlight-green')));
+                    p.text(resultNoDot, p.width/2, p.height/2);
+
+                    let startX = p.width/2 + p.textWidth(resultNoDot)/2;
+                    let targetX = p.width/2 - p.textWidth(resultNoDot)/2 + p.textWidth(resultNoDot.substring(0, commaPos));
+                    
+                    let currentX = p.lerp(startX, targetX, counter/60);
+                    
+                    p.fill(p.color(varGet('--accent-color')));
+                    p.ellipse(currentX, p.height/2 + 25, 10, 10);
+                    
+                    counter++;
+                    if(counter >= 60) {
+                       p.text(resultStr, p.width/2, p.height/2);
+                       stepBtn.disabled = true;
+                       p.noLoop();
+                    }
+                }
+            };
+        };
+
+
+        // --- Sketch 4: Division ---
+        const sketchDivision = (p) => {
+            let state = 'idle'; // idle, shift, divide
+            let counter = 0;
+            let str1, str2;
+            let shiftAmount = 0;
+            let explanationDiv = document.getElementById('divExplanation');
+            let stepBtn = document.getElementById('divStepBtn');
+            let resetBtn = document.getElementById('divResetBtn');
+            
+            function resetAnimation() {
+                state = 'idle';
+                explanationDiv.innerHTML = "Der Trick: Verschiebe das Komma bei <strong>beiden Zahlen</strong> so, dass die zweite Zahl (der Divisor) eine ganze Zahl wird.";
+                stepBtn.textContent = 'Start';
+                stepBtn.disabled = false;
+                resetBtn.style.display = 'none';
+                p.loop();
+            }
+
+            p.setup = function() {
+                let container = document.getElementById('canvasDivision');
+                let canvas = p.createCanvas(container.clientWidth, container.clientHeight);
+                canvas.parent(container);
+                p.textFont('monospace', 36);
+                p.textAlign(p.CENTER, p.CENTER);
+                
+                stepBtn.addEventListener('click', () => {
+                    switch (state) {
+                        case 'idle':
+                            state = 'shift';
+                            stepBtn.textContent = 'Nächster Schritt';
+                            resetBtn.style.display = 'inline-block';
+                            break;
+                        case 'shift':
+                            state = 'divide';
+                            break;
+                    }
+                    p.loop();
+                });
+
+                resetBtn.addEventListener('click', resetAnimation);
+
+                 ['divZahl1', 'divZahl2'].forEach(id => {
+                    document.getElementById(id).addEventListener('input', resetAnimation);
+                });
+                window.p5Instances.push(p);
+            };
+
+            p.draw = function() {
+                p.background(248, 252, 255);
+                p.fill(0);
+                
+                let val1 = document.getElementById('divZahl1').value;
+                let val2 = document.getElementById('divZahl2').value;
+
+                if (isNaN(parseFloat(val1)) || isNaN(parseFloat(val2)) || parseFloat(val2) === 0) {
+                     p.text("Ungültige Eingabe", p.width/2, p.height/2);
+                     p.noLoop(); return;
+                }
+
+                str1 = val1;
+                str2 = val2;
+                shiftAmount = (str2.split('.')[1] || '').length;
+
+                if (state === 'idle') {
+                    p.text(`${str1} : ${str2}`, p.width/2, p.height/2);
+                    p.noLoop();
+                } else if (state === 'shift') {
+                    explanationDiv.innerHTML = `Die zweite Zahl (${str2}) hat <strong>${shiftAmount}</strong> Nachkommastelle(n). Also verschieben wir bei beiden Zahlen das Komma um <strong>${shiftAmount}</strong> Stellen nach rechts.`;
+                    
+                    let newNum1 = parseFloat(str1) * Math.pow(10, shiftAmount);
+                    let newNum2 = parseFloat(str2) * Math.pow(10, shiftAmount);
+                    let newStr1 = newNum1.toFixed(Math.max(0, (str1.split('.')[1]||'').length - shiftAmount));
+                    if (newStr1.slice(-2) === '.0') newStr1 = newStr1.slice(0,-2);
+                    let newStr2 = newNum2.toFixed(0);
+
+                    p.text(`${newStr1} : ${newStr2}`, p.width/2, p.height/2);
+                    p.noLoop();
+
+                } else if (state === 'divide') {
+                    let newNum1 = parseFloat(str1) * Math.pow(10, shiftAmount);
+                    let newNum2 = parseFloat(str2) * Math.pow(10, shiftAmount);
+                    let result = newNum1 / newNum2;
+                    let newStr1 = newNum1.toFixed(Math.max(0, (str1.split('.')[1]||'').length - shiftAmount));
+                     if (newStr1.slice(-2) === '.0') newStr1 = newStr1.slice(0,-2);
+                    let newStr2 = newNum2.toFixed(0);
+                    
+                    explanationDiv.innerHTML = `Jetzt können wir einfach rechnen: <strong>${newStr1} : ${newStr2}</strong>. Das Ergebnis ist dasselbe!`;
+                    
+                    p.text(`${newStr1} : ${newStr2}`, p.width/2, p.height/2-30);
+                    p.fill(p.color(varGet('--highlight-green')));
+                    p.text(`= ${result.toFixed(4).replace(/\.?0+$/, "")}`, p.width/2, p.height/2 + 30);
+                    stepBtn.disabled = true;
+                    p.noLoop();
+                }
+            };
+        };
+
+        // Initialize all sketches
+        new p5(sketchAddition);
+        new p5(sketchZehner);
+        new p5(sketchMultiplikation);
+        new p5(sketchDivision);
+        
+        // Trigger resize and initial draw for the first tab
+        setTimeout(() => {
+             tabs[0].click();
+             tabs[0].click(); // a bit of a hack to force redraw after elements settle
+        }, 100);
+
+        // Helper to get CSS variables
+        function varGet(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        }
+
+    });
+    </script>
+
+</body>
+</html>
+
